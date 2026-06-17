@@ -1,0 +1,6 @@
+# データファイル（個人のお金情報なのでGitHubにはアップしない）
+transactions.json
+
+# Pythonが自動で作るファイル
+__pycache__/
+*.pyc
