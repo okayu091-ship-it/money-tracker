@@ -29,8 +29,8 @@ def save_data(data):
 
 
 def calc_balance(data):
-    # net > 0 のとき: person_b が person_a に借りている
-    # net < 0 のとき: person_a が person_b に借りている
+    # net > 0: person_b が person_a に借りている
+    # net < 0: person_a が person_b に借りている
     a = data["person_a"]
     net = 0
     for t in data["transactions"]:
@@ -45,7 +45,7 @@ data = load_data()
 
 root = tk.Tk()
 root.title("お金の管理アプリ")
-root.geometry("620x720")
+root.geometry("560x700")
 root.configure(bg=BG)
 
 tk.Label(root, text="お金の管理", font=("Arial", 22, "bold"), bg=BG, fg=TEXT).pack(pady=(20, 4))
@@ -57,10 +57,10 @@ names_label.pack()
 balance_frame = tk.Frame(root, bg=SURFACE, pady=18, padx=30)
 balance_frame.pack(fill="x", padx=20, pady=12)
 
-balance_label = tk.Label(balance_frame, text="", font=("Arial", 14), bg=SURFACE, fg=TEXT)
+balance_label = tk.Label(balance_frame, text="", font=("Arial", 12), bg=SURFACE, fg=SUBTEXT)
 balance_label.pack()
 
-amount_label = tk.Label(balance_frame, text="", font=("Arial", 38, "bold"), bg=SURFACE, fg=GREEN)
+amount_label = tk.Label(balance_frame, text="", font=("Arial", 26, "bold"), bg=SURFACE, fg=GREEN)
 amount_label.pack()
 
 # 取引追加フォーム
@@ -68,31 +68,46 @@ input_frame = tk.Frame(root, bg=SURFACE, pady=14, padx=20)
 input_frame.pack(fill="x", padx=20, pady=4)
 
 tk.Label(input_frame, text="取引を追加", font=("Arial", 13, "bold"), bg=SURFACE, fg=TEXT).grid(
-    row=0, column=0, columnspan=5, pady=(0, 10), sticky="w"
+    row=0, column=0, columnspan=4, pady=(0, 8), sticky="w"
 )
 
-for col, text in enumerate(["支払った人", "受け取った人", "金額（円）", "メモ（任意）"]):
-    tk.Label(input_frame, text=text, font=("Arial", 10), bg=SURFACE, fg=SUBTEXT).grid(
-        row=1, column=col, padx=6
-    )
+tk.Label(input_frame, text="支払った人", font=("Arial", 10), bg=SURFACE, fg=SUBTEXT).grid(
+    row=1, column=0, padx=6
+)
+
+# 金額ラベル + ラジオボタン（一人分 / 合計）
+amount_type = tk.StringVar(value="per_person")
+
+amount_col_frame = tk.Frame(input_frame, bg=SURFACE)
+amount_col_frame.grid(row=1, column=1, padx=6)
+
+tk.Label(amount_col_frame, text="金額（円）", font=("Arial", 10), bg=SURFACE, fg=SUBTEXT).pack(side="left")
+
+radio_style = {
+    "bg": SURFACE, "fg": SUBTEXT, "selectcolor": "#45475A",
+    "activebackground": SURFACE, "activeforeground": TEXT,
+    "font": ("Arial", 9), "bd": 0,
+}
+tk.Radiobutton(amount_col_frame, text="一人分", variable=amount_type, value="per_person", **radio_style).pack(side="left", padx=(6, 2))
+tk.Radiobutton(amount_col_frame, text="合計", variable=amount_type, value="total", **radio_style).pack(side="left")
+
+tk.Label(input_frame, text="メモ（任意）", font=("Arial", 10), bg=SURFACE, fg=SUBTEXT).grid(
+    row=1, column=2, padx=6
+)
 
 payer_var = tk.StringVar()
-receiver_var = tk.StringVar()
 
 payer_combo = ttk.Combobox(input_frame, textvariable=payer_var, width=9, state="readonly", font=("Arial", 11))
 payer_combo.grid(row=2, column=0, padx=6, pady=6)
 
-receiver_combo = ttk.Combobox(input_frame, textvariable=receiver_var, width=9, state="readonly", font=("Arial", 11))
-receiver_combo.grid(row=2, column=1, padx=6, pady=6)
-
-amount_entry = tk.Entry(input_frame, width=10, bg="#45475A", fg=TEXT, insertbackground=TEXT, font=("Arial", 12))
-amount_entry.grid(row=2, column=2, padx=6, pady=6)
+amount_entry = tk.Entry(input_frame, width=12, bg="#45475A", fg=TEXT, insertbackground=TEXT, font=("Arial", 12))
+amount_entry.grid(row=2, column=1, padx=6, pady=6)
 
 note_entry = tk.Entry(input_frame, width=16, bg="#45475A", fg=TEXT, insertbackground=TEXT, font=("Arial", 12))
-note_entry.grid(row=2, column=3, padx=6, pady=6)
+note_entry.grid(row=2, column=2, padx=6, pady=6)
 
 add_btn = tk.Button(input_frame, text="追加", font=("Arial", 12), bg=BLUE, fg=BG, relief="flat", width=6)
-add_btn.grid(row=2, column=4, padx=10)
+add_btn.grid(row=2, column=3, padx=10)
 
 # 取引履歴
 history_frame = tk.Frame(root, bg=BG)
@@ -135,43 +150,44 @@ def update_display():
     b = data["person_b"]
     names_label.config(text=f"{a}  と  {b}")
     payer_combo["values"] = [a, b]
-    receiver_combo["values"] = [a, b]
     if payer_var.get() not in [a, b]:
         payer_var.set(a)
-    if receiver_var.get() not in [a, b]:
-        receiver_var.set(b)
 
     net = calc_balance(data)
     if net == 0:
         balance_label.config(text="貸し借りなし", fg=TEXT)
         amount_label.config(text="0円", fg=GREEN)
     elif net > 0:
-        balance_label.config(text=f"{b} が {a} に借りている金額", fg=YELLOW)
-        amount_label.config(text=f"{net:,}円", fg=YELLOW)
+        balance_label.config(text="精算金額", fg=SUBTEXT)
+        amount_label.config(text=f"{b}  →  {a}    {net:,}円", fg=YELLOW)
     else:
-        balance_label.config(text=f"{a} が {b} に借りている金額", fg=RED)
-        amount_label.config(text=f"{abs(net):,}円", fg=RED)
+        balance_label.config(text="精算金額", fg=SUBTEXT)
+        amount_label.config(text=f"{a}  →  {b}    {abs(net):,}円", fg=RED)
 
     history_listbox.delete(0, "end")
     for t in reversed(data["transactions"]):
+        receiver = t.get("receiver", b if t["payer"] == a else a)
         note_str = f"  ({t['note']})" if t.get("note") else ""
-        line = f"  {t['date']}  {t['payer']} → {t['receiver']}  {t['amount']:,}円{note_str}"
+        line = f"  {t['date']}  {t['payer']} → {receiver}  {t['amount']:,}円{note_str}"
         history_listbox.insert("end", line)
 
 
 def add_transaction():
+    a = data["person_a"]
+    b = data["person_b"]
     payer = payer_var.get()
-    receiver = receiver_var.get()
-    if payer == receiver:
-        messagebox.showwarning("入力エラー", "支払った人と受け取った人が同じです")
-        return
+    receiver = b if payer == a else a
+
     try:
-        amount = int(amount_entry.get())
-        if amount <= 0:
+        raw_amount = int(amount_entry.get())
+        if raw_amount <= 0:
             raise ValueError
     except ValueError:
         messagebox.showwarning("入力エラー", "金額は1以上の整数を入力してください")
         return
+
+    # 合計金額の場合は半分にする（1円未満は切り捨て）
+    amount = raw_amount // 2 if amount_type.get() == "total" else raw_amount
 
     note = note_entry.get().strip()
     today = datetime.date.today().strftime("%Y-%m-%d")
@@ -193,10 +209,12 @@ def delete_transaction():
     if not selection:
         messagebox.showinfo("確認", "削除したい取引をクリックして選択してください")
         return
-    # 履歴は新しい順に表示しているため、インデックスを逆算
     index = len(data["transactions"]) - 1 - selection[0]
     t = data["transactions"][index]
-    if messagebox.askyesno("削除確認", f"{t['payer']} → {t['receiver']}  {t['amount']:,}円 を削除しますか？"):
+    a = data["person_a"]
+    b = data["person_b"]
+    receiver = t.get("receiver", b if t["payer"] == a else a)
+    if messagebox.askyesno("削除確認", f"{t['payer']} → {receiver}  {t['amount']:,}円 を削除しますか？"):
         data["transactions"].pop(index)
         save_data(data)
         update_display()
@@ -240,14 +258,13 @@ def open_settings():
                 t["payer"] = new_a
             elif t["payer"] == old_b:
                 t["payer"] = new_b
-            if t["receiver"] == old_a:
+            if t.get("receiver") == old_a:
                 t["receiver"] = new_a
-            elif t["receiver"] == old_b:
+            elif t.get("receiver") == old_b:
                 t["receiver"] = new_b
         data["person_a"] = new_a
         data["person_b"] = new_b
         payer_var.set("")
-        receiver_var.set("")
         save_data(data)
         update_display()
         win.destroy()
