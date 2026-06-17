@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
+from tkcalendar import DateEntry
 import json
 import os
 import datetime
@@ -68,18 +69,22 @@ input_frame = tk.Frame(root, bg=SURFACE, pady=14, padx=20)
 input_frame.pack(fill="x", padx=20, pady=4)
 
 tk.Label(input_frame, text="取引を追加", font=("Arial", 13, "bold"), bg=SURFACE, fg=TEXT).grid(
-    row=0, column=0, columnspan=4, pady=(0, 8), sticky="w"
+    row=0, column=0, columnspan=5, pady=(0, 8), sticky="w"
 )
 
 tk.Label(input_frame, text="支払った人", font=("Arial", 10), bg=SURFACE, fg=SUBTEXT).grid(
     row=1, column=0, padx=6
 )
 
+tk.Label(input_frame, text="日付", font=("Arial", 10), bg=SURFACE, fg=SUBTEXT).grid(
+    row=1, column=1, padx=6
+)
+
 # 金額ラベル + ラジオボタン（一人分 / 合計）
 amount_type = tk.StringVar(value="per_person")
 
 amount_col_frame = tk.Frame(input_frame, bg=SURFACE)
-amount_col_frame.grid(row=1, column=1, padx=6)
+amount_col_frame.grid(row=1, column=2, padx=6)
 
 tk.Label(amount_col_frame, text="金額（円）", font=("Arial", 10), bg=SURFACE, fg=SUBTEXT).pack(side="left")
 
@@ -92,7 +97,7 @@ tk.Radiobutton(amount_col_frame, text="一人分", variable=amount_type, value="
 tk.Radiobutton(amount_col_frame, text="合計", variable=amount_type, value="total", **radio_style).pack(side="left")
 
 tk.Label(input_frame, text="メモ（任意）", font=("Arial", 10), bg=SURFACE, fg=SUBTEXT).grid(
-    row=1, column=2, padx=6
+    row=1, column=3, padx=6
 )
 
 payer_var = tk.StringVar()
@@ -100,14 +105,25 @@ payer_var = tk.StringVar()
 payer_combo = ttk.Combobox(input_frame, textvariable=payer_var, width=9, state="readonly", font=("Arial", 11))
 payer_combo.grid(row=2, column=0, padx=6, pady=6)
 
-amount_entry = tk.Entry(input_frame, width=12, bg="#45475A", fg=TEXT, insertbackground=TEXT, font=("Arial", 12))
-amount_entry.grid(row=2, column=1, padx=6, pady=6)
+date_entry = DateEntry(
+    input_frame,
+    width=10,
+    background="#45475A",
+    foreground=TEXT,
+    borderwidth=0,
+    date_pattern="yyyy-mm-dd",
+    font=("Arial", 11),
+)
+date_entry.grid(row=2, column=1, padx=6, pady=6)
 
-note_entry = tk.Entry(input_frame, width=16, bg="#45475A", fg=TEXT, insertbackground=TEXT, font=("Arial", 12))
-note_entry.grid(row=2, column=2, padx=6, pady=6)
+amount_entry = tk.Entry(input_frame, width=12, bg="#45475A", fg=TEXT, insertbackground=TEXT, font=("Arial", 12))
+amount_entry.grid(row=2, column=2, padx=6, pady=6)
+
+note_entry = tk.Entry(input_frame, width=14, bg="#45475A", fg=TEXT, insertbackground=TEXT, font=("Arial", 12))
+note_entry.grid(row=2, column=3, padx=6, pady=6)
 
 add_btn = tk.Button(input_frame, text="追加", font=("Arial", 12), bg=BLUE, fg=BG, relief="flat", width=6)
-add_btn.grid(row=2, column=3, padx=10)
+add_btn.grid(row=2, column=4, padx=10)
 
 # 取引履歴
 history_frame = tk.Frame(root, bg=BG)
@@ -190,7 +206,7 @@ def add_transaction():
     amount = raw_amount // 2 if amount_type.get() == "total" else raw_amount
 
     note = note_entry.get().strip()
-    today = datetime.date.today().strftime("%Y-%m-%d")
+    today = date_entry.get_date().strftime("%Y-%m-%d")
     data["transactions"].append({
         "payer": payer,
         "receiver": receiver,
