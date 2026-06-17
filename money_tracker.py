@@ -42,11 +42,18 @@ def calc_balance(data):
     return net
 
 
+def get_actual_index(display_index):
+    """表示順（日付ソート）のインデックスを、data["transactions"] の実インデックスに変換する"""
+    sorted_pairs = sorted(enumerate(data["transactions"]), key=lambda x: x[1]["date"])
+    return sorted_pairs[display_index][0]
+
+
 data = load_data()
+editing_index = None
 
 root = tk.Tk()
 root.title("お金の管理アプリ")
-root.geometry("560x700")
+root.geometry("580x700")
 root.configure(bg=BG)
 
 tk.Label(root, text="お金の管理", font=("Arial", 22, "bold"), bg=BG, fg=TEXT).pack(pady=(20, 4))
@@ -64,30 +71,22 @@ balance_label.pack()
 amount_label = tk.Label(balance_frame, text="", font=("Arial", 26, "bold"), bg=SURFACE, fg=GREEN)
 amount_label.pack()
 
-# 取引追加フォーム
+# 取引フォーム
 input_frame = tk.Frame(root, bg=SURFACE, pady=14, padx=20)
 input_frame.pack(fill="x", padx=20, pady=4)
 
-tk.Label(input_frame, text="取引を追加", font=("Arial", 13, "bold"), bg=SURFACE, fg=TEXT).grid(
-    row=0, column=0, columnspan=5, pady=(0, 8), sticky="w"
-)
+form_title_label = tk.Label(input_frame, text="取引を追加", font=("Arial", 13, "bold"), bg=SURFACE, fg=TEXT)
+form_title_label.grid(row=0, column=0, columnspan=6, pady=(0, 8), sticky="w")
 
-tk.Label(input_frame, text="支払った人", font=("Arial", 10), bg=SURFACE, fg=SUBTEXT).grid(
-    row=1, column=0, padx=6
-)
-
-tk.Label(input_frame, text="日付", font=("Arial", 10), bg=SURFACE, fg=SUBTEXT).grid(
-    row=1, column=1, padx=6
-)
-
-# 金額ラベル + ラジオボタン（一人分 / 合計）
-amount_type = tk.StringVar(value="per_person")
+tk.Label(input_frame, text="支払った人", font=("Arial", 10), bg=SURFACE, fg=SUBTEXT).grid(row=1, column=0, padx=6)
+tk.Label(input_frame, text="日付", font=("Arial", 10), bg=SURFACE, fg=SUBTEXT).grid(row=1, column=1, padx=6)
+tk.Label(input_frame, text="メモ", font=("Arial", 10), bg=SURFACE, fg=SUBTEXT).grid(row=1, column=2, padx=6)
 
 amount_col_frame = tk.Frame(input_frame, bg=SURFACE)
-amount_col_frame.grid(row=1, column=2, padx=6)
-
+amount_col_frame.grid(row=1, column=3, padx=6)
 tk.Label(amount_col_frame, text="金額（円）", font=("Arial", 10), bg=SURFACE, fg=SUBTEXT).pack(side="left")
 
+amount_type = tk.StringVar(value="per_person")
 radio_style = {
     "bg": SURFACE, "fg": SUBTEXT, "selectcolor": "#45475A",
     "activebackground": SURFACE, "activeforeground": TEXT,
@@ -96,34 +95,28 @@ radio_style = {
 tk.Radiobutton(amount_col_frame, text="一人分", variable=amount_type, value="per_person", **radio_style).pack(side="left", padx=(6, 2))
 tk.Radiobutton(amount_col_frame, text="合計", variable=amount_type, value="total", **radio_style).pack(side="left")
 
-tk.Label(input_frame, text="メモ（任意）", font=("Arial", 10), bg=SURFACE, fg=SUBTEXT).grid(
-    row=1, column=3, padx=6
-)
-
 payer_var = tk.StringVar()
-
 payer_combo = ttk.Combobox(input_frame, textvariable=payer_var, width=9, state="readonly", font=("Arial", 11))
 payer_combo.grid(row=2, column=0, padx=6, pady=6)
 
 date_entry = DateEntry(
-    input_frame,
-    width=10,
-    background="#45475A",
-    foreground=TEXT,
-    borderwidth=0,
-    date_pattern="yyyy-mm-dd",
-    font=("Arial", 11),
+    input_frame, width=10, background="#45475A", foreground=TEXT,
+    borderwidth=0, date_pattern="yyyy-mm-dd", font=("Arial", 11),
 )
 date_entry.grid(row=2, column=1, padx=6, pady=6)
 
-amount_entry = tk.Entry(input_frame, width=12, bg="#45475A", fg=TEXT, insertbackground=TEXT, font=("Arial", 12))
-amount_entry.grid(row=2, column=2, padx=6, pady=6)
-
 note_entry = tk.Entry(input_frame, width=14, bg="#45475A", fg=TEXT, insertbackground=TEXT, font=("Arial", 12))
-note_entry.grid(row=2, column=3, padx=6, pady=6)
+note_entry.grid(row=2, column=2, padx=6, pady=6)
+
+amount_entry = tk.Entry(input_frame, width=12, bg="#45475A", fg=TEXT, insertbackground=TEXT, font=("Arial", 12))
+amount_entry.grid(row=2, column=3, padx=6, pady=6)
 
 add_btn = tk.Button(input_frame, text="追加", font=("Arial", 12), bg=BLUE, fg=BG, relief="flat", width=6)
-add_btn.grid(row=2, column=4, padx=10)
+add_btn.grid(row=2, column=4, padx=6)
+
+cancel_btn = tk.Button(input_frame, text="キャンセル", font=("Arial", 11), bg="#45475A", fg=SUBTEXT, relief="flat")
+cancel_btn.grid(row=2, column=5, padx=4)
+cancel_btn.grid_remove()
 
 # 取引履歴
 history_frame = tk.Frame(root, bg=BG)
@@ -181,14 +174,43 @@ def update_display():
         amount_label.config(text=f"{a}  →  {b}    {abs(net):,}円", fg=RED)
 
     history_listbox.delete(0, "end")
-    for t in reversed(data["transactions"]):
+    for t in sorted(data["transactions"], key=lambda t: t["date"]):
         receiver = t.get("receiver", b if t["payer"] == a else a)
         note_str = f"  ({t['note']})" if t.get("note") else ""
         line = f"  {t['date']}  {t['payer']} → {receiver}  {t['amount']:,}円{note_str}"
         history_listbox.insert("end", line)
+    history_listbox.see("end")
+
+
+def enter_edit_mode(index):
+    global editing_index
+    editing_index = index
+    t = data["transactions"][index]
+    payer_var.set(t["payer"])
+    date_entry.set_date(datetime.datetime.strptime(t["date"], "%Y-%m-%d").date())
+    note_entry.delete(0, "end")
+    note_entry.insert(0, t.get("note", ""))
+    amount_entry.delete(0, "end")
+    amount_entry.insert(0, str(t["amount"]))
+    amount_type.set("per_person")
+    form_title_label.config(text="取引を編集")
+    add_btn.config(text="更新", bg=YELLOW, fg=BG)
+    cancel_btn.grid(row=2, column=5, padx=4)
+    amount_entry.focus()
+
+
+def cancel_edit():
+    global editing_index
+    editing_index = None
+    form_title_label.config(text="取引を追加")
+    add_btn.config(text="追加", bg=BLUE, fg=BG)
+    cancel_btn.grid_remove()
+    note_entry.delete(0, "end")
+    amount_entry.delete(0, "end")
 
 
 def add_transaction():
+    global editing_index
     a = data["person_a"]
     b = data["person_b"]
     payer = payer_var.get()
@@ -202,18 +224,25 @@ def add_transaction():
         messagebox.showwarning("入力エラー", "金額は1以上の整数を入力してください")
         return
 
-    # 合計金額の場合は半分にする（1円未満は切り捨て）
     amount = raw_amount // 2 if amount_type.get() == "total" else raw_amount
-
     note = note_entry.get().strip()
     today = date_entry.get_date().strftime("%Y-%m-%d")
-    data["transactions"].append({
-        "payer": payer,
-        "receiver": receiver,
-        "amount": amount,
-        "note": note,
-        "date": today,
-    })
+
+    if editing_index is not None:
+        data["transactions"][editing_index].update({
+            "payer": payer, "receiver": receiver,
+            "amount": amount, "note": note, "date": today,
+        })
+        editing_index = None
+        form_title_label.config(text="取引を追加")
+        add_btn.config(text="追加", bg=BLUE, fg=BG)
+        cancel_btn.grid_remove()
+    else:
+        data["transactions"].append({
+            "payer": payer, "receiver": receiver,
+            "amount": amount, "note": note, "date": today,
+        })
+
     save_data(data)
     amount_entry.delete(0, "end")
     note_entry.delete(0, "end")
@@ -225,15 +254,21 @@ def delete_transaction():
     if not selection:
         messagebox.showinfo("確認", "削除したい取引をクリックして選択してください")
         return
-    index = len(data["transactions"]) - 1 - selection[0]
-    t = data["transactions"][index]
+    actual_index = get_actual_index(selection[0])
+    t = data["transactions"][actual_index]
     a = data["person_a"]
     b = data["person_b"]
     receiver = t.get("receiver", b if t["payer"] == a else a)
     if messagebox.askyesno("削除確認", f"{t['payer']} → {receiver}  {t['amount']:,}円 を削除しますか？"):
-        data["transactions"].pop(index)
+        data["transactions"].pop(actual_index)
         save_data(data)
         update_display()
+
+
+def on_history_double_click(event):
+    selection = history_listbox.curselection()
+    if selection:
+        enter_edit_mode(get_actual_index(selection[0]))
 
 
 def open_settings():
@@ -289,8 +324,10 @@ def open_settings():
 
 
 add_btn.config(command=add_transaction)
+cancel_btn.config(command=cancel_edit)
 delete_btn.config(command=delete_transaction)
 settings_btn.config(command=open_settings)
+history_listbox.bind("<Double-Button-1>", on_history_double_click)
 
 update_display()
 root.mainloop()
