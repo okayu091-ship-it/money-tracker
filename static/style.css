@@ -1,0 +1,235 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #1E1E2E;
+  color: #CDD6F4;
+  font-family: Arial, sans-serif;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+h1 {
+  font-size: 1.8rem;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.names {
+  text-align: center;
+  color: #A6ADC8;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: #313244;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+/* 残高 */
+.balance-card {
+  text-align: center;
+  padding: 24px;
+}
+
+.balance-label {
+  font-size: 0.9rem;
+  color: #A6ADC8;
+  margin-bottom: 8px;
+}
+
+.balance-amount {
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.balance-amount.green { color: #A6E3A1; }
+.balance-amount.yellow { color: #F9E2AF; }
+.balance-amount.red { color: #F38BA8; }
+
+/* フォーム */
+h2 {
+  font-size: 1rem;
+  margin-bottom: 14px;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-group label {
+  font-size: 0.8rem;
+  color: #A6ADC8;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="date"],
+.form-group select {
+  background: #45475A;
+  border: none;
+  border-radius: 6px;
+  color: #CDD6F4;
+  font-size: 0.95rem;
+  padding: 7px 10px;
+  outline: none;
+}
+
+.form-group input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+.radio-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 5px;
+  font-size: 0.85rem;
+  color: #A6ADC8;
+}
+
+.btn-primary {
+  background: #89B4FA;
+  color: #1E1E2E;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 0.95rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  opacity: 0.85;
+}
+
+.btn-cancel {
+  background: #45475A;
+  color: #A6ADC8;
+  text-decoration: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+/* 履歴テーブル */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+th {
+  color: #A6ADC8;
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid #45475A;
+  font-weight: normal;
+}
+
+td {
+  padding: 9px 8px;
+  border-bottom: 1px solid #45475A;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+td.note {
+  color: #A6ADC8;
+  font-size: 0.85rem;
+}
+
+td.actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.btn-edit {
+  background: #45475A;
+  color: #CDD6F4;
+  text-decoration: none;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.btn-edit:hover {
+  background: #585b70;
+}
+
+.btn-delete {
+  background: transparent;
+  color: #F38BA8;
+  border: none;
+  cursor: pointer;
+  font-size: 0.82rem;
+  padding: 4px 6px;
+}
+
+.btn-delete:hover {
+  text-decoration: underline;
+}
+
+.empty {
+  color: #A6ADC8;
+  text-align: center;
+  padding: 24px;
+}
+
+/* 名前の設定 */
+details summary {
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #A6ADC8;
+  list-style: none;
+}
+
+details summary::before {
+  content: "▶ ";
+  font-size: 0.75rem;
+}
+
+details[open] summary::before {
+  content: "▼ ";
+}
+
+/* モバイル対応 */
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+  }
+
+  .balance-amount {
+    font-size: 1.4rem;
+  }
+
+  table {
+    font-size: 0.82rem;
+  }
+
+  td, th {
+    padding: 7px 4px;
+  }
+}

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>取引を編集</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>取引を編集</h1>
+    <div class="card">
+      <form action="/edit/{{ index }}" method="post">
+        <div class="form-group">
+          <label>支払った人</label>
+          <select name="payer">
+            <option {% if t.payer == data.person_a %}selected{% endif %}>{{ data.person_a }}</option>
+            <option {% if t.payer == data.person_b %}selected{% endif %}>{{ data.person_b }}</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-top: 12px;">
+          <label>日付</label>
+          <input type="date" name="date" value="{{ t.date }}" required>
+        </div>
+        <div class="form-group" style="margin-top: 12px;">
+          <label>メモ（任意）</label>
+          <input type="text" name="note" value="{{ t.note or '' }}">
+        </div>
+        <div class="form-group" style="margin-top: 12px;">
+          <label>金額（一人分・円）</label>
+          <input type="number" name="amount" value="{{ t.amount }}" min="1" required>
+        </div>
+        <div class="form-row" style="margin-top: 20px;">
+          <button type="submit" class="btn-primary">更新</button>
+          <a href="/" class="btn-cancel">キャンセル</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
