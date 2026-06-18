@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>お金の管理</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>お金の管理</h1>
+    <p class="names">{{ data.person_a }}　と　{{ data.person_b }}</p>
+
+    <!-- 残高 -->
+    <div class="card balance-card">
+      {% if net == 0 %}
+        <p class="balance-label">貸し借りなし</p>
+        <p class="balance-amount green">0円</p>
+      {% elif net > 0 %}
+        <p class="balance-label">精算金額</p>
+        <p class="balance-amount yellow">{{ data.person_b }}　→　{{ data.person_a }}　{{ "{:,}".format(net) }}円</p>
+      {% else %}
+        <p class="balance-label">精算金額</p>
+        <p class="balance-amount red">{{ data.person_a }}　→　{{ data.person_b }}　{{ "{:,}".format(-net) }}円</p>
+      {% endif %}
+    </div>
+
+    <!-- 取引追加フォーム -->
+    <div class="card">
+      <h2>取引を追加</h2>
+      <form action="/add" method="post">
+        <div class="form-row">
+          <div class="form-group">
+            <label>支払った人</label>
+            <select name="payer">
+              <option>{{ data.person_a }}</option>
+              <option>{{ data.person_b }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>日付</label>
+            <input type="date" name="date" value="{{ today }}">
+          </div>
+          <div class="form-group">
+            <label>メモ（任意）</label>
+            <input type="text" name="note" placeholder="例：ランチ代">
+          </div>
+          <div class="form-group">
+            <label>金額（円）</label>
+            <input type="number" name="amount" min="1" placeholder="0" required>
+            <div class="radio-group">
+              <label><input type="radio" name="amount_type" value="per_person" checked> 一人分</label>
+              <label><input type="radio" name="amount_type" value="total"> 合計</label>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary">追加</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 取引履歴 -->
+    <div class="card">
+      <h2>取引履歴</h2>
+      {% if sorted_transactions %}
+        <table>
+          <thead>
+            <tr>
+              <th>日付</th>
+              <th>支払い</th>
+              <th>金額</th>
+              <th>メモ</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for actual_index, t, receiver in sorted_transactions %}
+            <tr>
+              <td>{{ t.date }}</td>
+              <td>{{ t.payer }}　→　{{ receiver }}</td>
+              <td>{{ "{:,}".format(t.amount) }}円</td>
+              <td class="note">{{ t.note }}</td>
+              <td class="actions">
+                <a href="/edit/{{ actual_index }}" class="btn-edit">編集</a>
+                <form action="/delete/{{ actual_index }}" method="post" style="display:inline">
+                  <button type="submit" class="btn-delete"
+                    onclick="return confirm('{{ t.date }}　{{ t.payer }} → {{ receiver }}　{{ "{:,}".format(t.amount) }}円\nを削除しますか？')">削除</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="empty">取引がありません</p>
+      {% endif %}
+    </div>
+
+    <!-- 名前の設定 -->
+    <details class="card">
+      <summary>名前の設定</summary>
+      <form action="/settings" method="post" style="margin-top: 12px;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Aさんの名前</label>
+            <input type="text" name="person_a" value="{{ data.person_a }}" required>
+          </div>
+          <div class="form-group">
+            <label>Bさんの名前</label>
+            <input type="text" name="person_b" value="{{ data.person_b }}" required>
+          </div>
+          <button type="submit" class="btn-primary">保存</button>
+        </div>
+      </form>
+    </details>
+
+  </div>
+</body>
+</html>

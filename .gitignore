@@ -4,3 +4,7 @@ transactions.json
 # Pythonが自動で作るファイル
 __pycache__/
 *.pyc
+
+# Flaskの開発用ファイル
+instance/
+.flask_session
